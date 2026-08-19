@@ -1,4 +1,15 @@
-// Intentionally empty by default.
-// Add Drizzle tables here when the site actually needs a database.
-// See examples/d1/db/schema.ts for an opt-in example.
-export {};
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+
+export const clubChoices = sqliteTable("club_choices", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  teamSlug: text("team_slug").notNull(),
+  season: text("season").notNull().default("2027-2028"),
+  userEmail: text("user_email").notNull(),
+  sportingDirector: integer("sporting_director", { mode: "boolean" }).notNull().default(false),
+  stadium: integer("stadium", { mode: "boolean" }).notNull().default(false),
+  formation: text("formation"),
+  lineupJson: text("lineup_json"),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  uniqueIndex("idx_club_choices_team_season").on(table.teamSlug, table.season),
+]);

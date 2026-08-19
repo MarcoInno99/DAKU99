@@ -13,8 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://baia-domitia-championship.daku99.chatgpt.site"),
   title: "Baia Domitia Championship | Manager League",
   description: "Il portale manageriale della Baia Domitia Championship: rose, bilanci, stipendi, riconferme e strutture.",
+  openGraph: {
+    title: "Baia Domitia Championship",
+    description: "Il fantacalcio diventa manageriale.",
+    images: ["/og.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Baia Domitia Championship",
+    description: "Manager League · Mantra",
+    images: ["/og.png"],
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
