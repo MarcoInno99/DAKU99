@@ -8,6 +8,13 @@
       "when": 1787144783774,
       "tag": "0000_thick_night_thrasher",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787145546454,
+      "tag": "0001_unknown_lightspeed",
+      "breakpoints": true
     }
   ]
 }

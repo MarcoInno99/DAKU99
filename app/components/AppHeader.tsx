@@ -1,9 +1,7 @@
-import Link from "next/link";
-
-export function AppHeader({ teamSlug, email }: { teamSlug: string | null; email: string | null }) {
+export function AppHeader({ teamSlug, email, isAdmin = false }: { teamSlug: string | null; email: string | null; isAdmin?: boolean }) {
   return <header className="app-header">
-    <Link href="/" className="brand-link"><span className="brand-mark">BDC</span><span><strong>Baia Domitia Championship</strong><small>Manager League · Mantra</small></span></Link>
-    <nav aria-label="Navigazione principale"><Link href="/">La mia società</Link>{teamSlug && <Link href="/formazione">Formazione</Link>}<Link href="/squadre">Club</Link><Link href="/regolamento">Regole</Link></nav>
+    <a href="/" className="brand-link"><span className="brand-mark">BDC</span><span><strong>Baia Domitia Championship</strong><small>Manager League · Mantra</small></span></a>
+    <nav aria-label="Navigazione principale"><a href="/">La mia società</a>{teamSlug && <a href="/formazione">Formazione</a>}<a href="/squadre">Club</a><a href="/regolamento">Regole</a>{isAdmin && <a href="/admin">Amministrazione</a>}</nav>
     <div className="account-chip"><span>{email ?? "Anteprima locale"}</span><i /></div>
   </header>;
 }
