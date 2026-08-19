@@ -1,0 +1,2 @@
+CREATE TABLE `minigame_bets` (`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,`team_slug` text NOT NULL,`user_email` text NOT NULL,`season` text NOT NULL,`round` integer NOT NULL,`mode` text NOT NULL,`picks_json` text NOT NULL,`status` text DEFAULT 'pending' NOT NULL,`base_reward` integer DEFAULT 0 NOT NULL,`awarded_credits` integer DEFAULT 0 NOT NULL,`streak` integer DEFAULT 0 NOT NULL,`locked_at` text NOT NULL,`settled_at` text);
+CREATE UNIQUE INDEX `idx_minigame_team_round` ON `minigame_bets` (`team_slug`,`season`,`round`);
