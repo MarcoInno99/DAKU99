@@ -17,3 +17,13 @@ export const clubChoices = sqliteTable("club_choices", {
 }, (table) => [
   uniqueIndex("idx_club_choices_team_season").on(table.teamSlug, table.season),
 ]);
+
+export const clubIdentity = sqliteTable("club_identity", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  teamSlug: text("team_slug").notNull().unique(),
+  userEmail: text("user_email").notNull(),
+  avatarJson: text("avatar_json").notNull(),
+  kitJson: text("kit_json").notNull(),
+  crestKey: text("crest_key"),
+  updatedAt: text("updated_at").notNull(),
+});
