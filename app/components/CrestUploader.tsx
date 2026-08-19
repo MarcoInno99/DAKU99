@@ -23,8 +23,9 @@ export function CrestUploader({ team }: { team: Team }) {
   const [exists, setExists] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [coachName, setCoachName] = useState("");
 
-  useEffect(() => { fetch(`/api/identity?team=${team.slug}`).then(r => r.json()).then(data => { if (data.identity?.crest_key) { setExists(true); setUrl(`/api/identity/crest?team=${team.slug}&v=${Date.now()}`); } }); }, [team.slug]);
+  useEffect(() => { fetch(`/api/identity?team=${team.slug}`).then(r => r.json()).then(data => { if (data.identity?.crest_key) { setExists(true); setUrl(`/api/identity/crest?team=${team.slug}&v=${Date.now()}`); } setCoachName(data.identity?.coach_name ?? ""); }); }, [team.slug]);
 
   async function choose(input: File | null) {
     setMessage("");
@@ -48,5 +49,7 @@ export function CrestUploader({ team }: { team: Team }) {
     finally { setBusy(false); }
   }
 
-  return <section className="crest-page"><div className="crest-copy"><p className="eyebrow">Identità della squadra</p><h1>Carica il tuo stemma</h1><p>Lo stemma sarà visibile nell’elenco delle squadre e nella pagina pubblica del club. L’immagine viene ottimizzata automaticamente prima del caricamento.</p><div className="crest-rules"><span>PNG, JPG o WEBP</span><span>File originale fino a 20 MB</span><span>Formato consigliato 1:1</span></div></div><div className="crest-card"><div className="crest-preview">{url ? <img src={url} alt={`Stemma ${team.name}`}/> : <div>{team.name.split(" ").map(x => x[0]).join("").slice(0,3)}</div>}</div><h2>{team.name}</h2><p>{exists ? "Stemma attualmente pubblicato" : "Nessuno stemma caricato"}</p><label className="crest-file"><input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={event => choose(event.target.files?.[0] ?? null)}/><span>{busy ? "Preparazione…" : file ? file.name : "Scegli immagine"}</span></label><button onClick={save} disabled={busy || !file}>{busy ? "Attendi…" : "Salva stemma squadra"}</button>{message && <small>{message}</small>}</div></section>;
+  async function saveCoach() { setBusy(true); const response = await fetch("/api/identity/coach", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ coachName }) }); const data = await response.json().catch(() => ({})); setBusy(false); setMessage(response.ok ? "Nome dell’allenatore salvato." : data.error ?? "Salvataggio non riuscito."); }
+
+  return <section className="crest-page"><div className="crest-copy"><p className="eyebrow">Identità della squadra</p><h1>Stemma e allenatore</h1><p>Personalizza l’identità pubblica del club. L’immagine viene ottimizzata automaticamente prima del caricamento.</p><div className="coach-field"><label>Nome dell’allenatore<input value={coachName} maxLength={60} placeholder="Es. Marco Izzo" onChange={event => setCoachName(event.target.value)}/></label><button className="secondary-button" disabled={busy || coachName.trim().length < 2} onClick={saveCoach}>Salva allenatore</button></div><div className="crest-rules"><span>PNG, JPG o WEBP</span><span>File originale fino a 20 MB</span><span>Formato consigliato 1:1</span></div></div><div className="crest-card"><div className="crest-preview">{url ? <img src={url} alt={`Stemma ${team.name}`}/> : <div>{team.name.split(" ").map(x => x[0]).join("").slice(0,3)}</div>}</div><h2>{team.name}</h2><p>{coachName ? `Allenatore: ${coachName}` : exists ? "Stemma attualmente pubblicato" : "Nessuno stemma caricato"}</p><label className="crest-file"><input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={event => choose(event.target.files?.[0] ?? null)}/><span>{busy ? "Preparazione…" : file ? file.name : "Scegli immagine"}</span></label><button onClick={save} disabled={busy || !file}>{busy ? "Attendi…" : "Salva stemma squadra"}</button>{message && <small>{message}</small>}</div></section>;
 }

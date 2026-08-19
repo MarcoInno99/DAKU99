@@ -25,6 +25,7 @@ export const clubIdentity = sqliteTable("club_identity", {
   avatarJson: text("avatar_json").notNull(),
   kitJson: text("kit_json").notNull(),
   crestKey: text("crest_key"),
+  coachName: text("coach_name"),
   updatedAt: text("updated_at").notNull(),
 });
 

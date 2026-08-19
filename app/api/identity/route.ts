@@ -7,7 +7,9 @@ async function ensureSchema() { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS
 export async function GET(request: Request) {
   await ensureSchema(); const team = new URL(request.url).searchParams.get("team");
   if (!team) return Response.json({ error: "Club mancante" }, { status: 400 });
-  const row = await env.DB.prepare("SELECT team_slug,crest_key,updated_at FROM club_identity WHERE team_slug=?").bind(team).first();
+  const columns = await env.DB.prepare("PRAGMA table_info(club_identity)").all<{name:string}>();
+  const hasCoach = (columns.results ?? []).some(column => column.name === "coach_name");
+  const row = await env.DB.prepare(`SELECT team_slug,crest_key,updated_at${hasCoach ? ",coach_name" : ""} FROM club_identity WHERE team_slug=?`).bind(team).first();
   return Response.json({ identity: row ?? null });
 }
 
