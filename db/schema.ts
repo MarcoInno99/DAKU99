@@ -52,3 +52,20 @@ export const clubSponsors = sqliteTable("club_sponsors", {
   season: text("season").notNull(), sponsorSlug: text("sponsor_slug").notNull(),
   userEmail: text("user_email").notNull(), lockedAt: text("locked_at").notNull(),
 }, (table) => [uniqueIndex("idx_club_sponsors_team_season").on(table.teamSlug, table.season)]);
+
+export const arenaPresence = sqliteTable("arena_presence", {
+  teamSlug: text("team_slug").primaryKey(), userEmail: text("user_email").notNull(), lastSeen: text("last_seen").notNull(),
+});
+
+export const arenaMatches = sqliteTable("arena_matches", {
+  id: text("id").primaryKey(), challengerTeam: text("challenger_team").notNull(), opponentTeam: text("opponent_team").notNull(),
+  mode: text("mode").notNull(), status: text("status").notNull().default("pending"), questionsJson: text("questions_json").notNull(),
+  currentRound: integer("current_round").notNull().default(0), challengerScore: integer("challenger_score").notNull().default(0),
+  opponentScore: integer("opponent_score").notNull().default(0), winnerTeam: text("winner_team"), createdAt: text("created_at").notNull(),
+  startedAt: text("started_at"), finishedAt: text("finished_at"),
+});
+
+export const arenaAnswers = sqliteTable("arena_answers", {
+  id: integer("id").primaryKey({ autoIncrement: true }), matchId: text("match_id").notNull(), round: integer("round").notNull(),
+  teamSlug: text("team_slug").notNull(), answerIndex: integer("answer_index").notNull(), correct: integer("correct", { mode: "boolean" }).notNull(), answeredAt: text("answered_at").notNull(),
+}, (table) => [uniqueIndex("idx_arena_answer_match_round_team").on(table.matchId, table.round, table.teamSlug)]);
