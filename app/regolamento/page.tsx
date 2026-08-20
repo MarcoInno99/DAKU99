@@ -3,7 +3,7 @@ import { AppHeader } from "../components/AppHeader";
 import { teamForEmail } from "../lib/identity";
 export const dynamic="force-dynamic";
 const rules=[
-  ["Budget","Ogni società riceve 500 crediti annuali e può riportarne al massimo 50 dalla stagione precedente."],
+  ["Budget","Ogni società riceve 500 crediti annuali e può riportarne al massimo 75 dalla stagione precedente."],
   ["Stipendi","Si pagano nella stagione corrente in due rate: 3% del valore della rosa a settembre e 3% a febbraio. Ogni rata resta fissata al momento dell’addebito e non viene ricalcolata retroattivamente."],
   ["Bonus societari","Ogni club può attivare al massimo due bonus per stagione, pagandoli prima dell’asta."],
   ["Direttore Sportivo","Costo 25 crediti: permette una seconda riconferma Under 21."],
