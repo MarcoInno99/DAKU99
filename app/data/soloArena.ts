@@ -55,8 +55,8 @@ export const careerCards:CareerCard[]=[
 ];
 
 export const mysteryElevens:MysteryEleven[]=[
- {prompt:"Quale squadra vinse il Triplete 2009/10 con questa ossatura?",players:["Júlio César","Maicon","Lúcio","Samuel","Zanetti","Cambiasso","Sneijder","Eto'o","Milito"],answer:"Inter",options:["Inter","Milan","Juventus","Roma"]},
- {prompt:"Quale squadra vinse la Champions 2006/07 con questa ossatura?",players:["Dida","Cafu","Nesta","Maldini","Pirlo","Gattuso","Seedorf","Kaká","Inzaghi"],answer:"Milan",options:["Milan","Liverpool","Inter","Juventus"]},
+ {prompt:"Quale squadra italiana realizzò il Triplete nella stagione 2009/10?",players:["Júlio César","Maicon","Lúcio","Samuel","Zanetti","Cambiasso","Sneijder","Eto'o","Milito"],answer:"Inter",options:["Inter","Milan","Juventus","Roma"]},
+ {prompt:"Quale squadra italiana vinse la Champions League nella stagione 2006/07?",players:["Dida","Cafu","Nesta","Maldini","Pirlo","Gattuso","Seedorf","Kaká","Inzaghi"],answer:"Milan",options:["Milan","Liverpool","Inter","Juventus"]},
  {prompt:"Quale squadra dominò la Serie A 2013/14 con 102 punti?",players:["Buffon","Barzagli","Bonucci","Chiellini","Pirlo","Pogba","Vidal","Tévez","Llorente"],answer:"Juventus",options:["Juventus","Roma","Napoli","Inter"]},
  {prompt:"Quale squadra vinse lo Scudetto 1986/87?",players:["Garella","Ferrara","Bagni","De Napoli","Giordano","Carnevale","Maradona"],answer:"Napoli",options:["Napoli","Milan","Juventus","Roma"]},
  {prompt:"Quale squadra vinse lo Scudetto 1990/91?",players:["Pagliuca","Mannini","Vierchowod","Lanna","Cerezo","Dossena","Mancini","Vialli"],answer:"Sampdoria",options:["Sampdoria","Milan","Inter","Napoli"]},
