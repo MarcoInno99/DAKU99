@@ -1,0 +1,15 @@
+import { getChatGPTUser } from "../../../chatgpt-auth";
+import { teams } from "../../../data/league";
+import { serieAHistoricalQuiz } from "../../../data/serieAQuiz";
+import { careerCards,mysteryElevens } from "../../../data/soloArena";
+import { teamForEmail } from "../../../lib/identity";
+
+type SoloQuestion={prompt:string;clues:string[];options:string[];answer:number};
+const shuffle=<T,>(items:T[])=>[...items].sort(()=>Math.random()-.5);
+const players=()=>teams.flatMap(team=>team.roster).filter((player,index,list)=>list.findIndex(item=>item.name===player.name)===index);
+function options(correct:string,pool:string[]){return shuffle([correct,...shuffle([...new Set(pool)].filter(item=>item!==correct)).slice(0,3)])}
+function playerQuestions(){const pool=players();return shuffle(pool).flatMap(player=>{const names=options(player.name,pool.map(item=>item.name)),clubs=options(player.club,pool.map(item=>item.club)),roles=options(player.role,pool.map(item=>item.role));return[{prompt:"Chi è il calciatore?",clues:[`Ruolo Mantra: ${player.role}`,`Età: ${player.age}`,`Club: ${player.club}`,`Quotazione: ${player.quotation}`,`FVM: ${player.fvm}`],options:names,answer:names.indexOf(player.name)},{prompt:`In quale club gioca ${player.name}?`,clues:[`Ruolo: ${player.role}`,`Età: ${player.age}`],options:clubs,answer:clubs.indexOf(player.club)},{prompt:`Qual è il ruolo Mantra di ${player.name}?`,clues:[`Club: ${player.club}`,`Età: ${player.age}`],options:roles,answer:roles.indexOf(player.role)}]})}
+function careerQuestions(){return shuffle(careerCards).map(card=>{const names=options(card.player,careerCards.map(item=>item.player));return{prompt:"Di quale calciatore è questa carriera?",clues:[card.clubs.join("  →  "),`Nazionalità: ${card.nationality}`,`Ruolo: ${card.role}`],options:names,answer:names.indexOf(card.player)}})}
+function elevenQuestions(){return shuffle(mysteryElevens).map(card=>{const choices=shuffle(card.options);return{prompt:card.prompt,clues:card.players,options:choices,answer:choices.indexOf(card.answer)}})}
+function historyQuestions(){return shuffle(serieAHistoricalQuiz).map(item=>{const choices=shuffle(item.options);return{prompt:item.prompt,clues:[],options:choices,answer:choices.indexOf(item.correct)}})}
+export async function GET(request:Request){const user=await getChatGPTUser();if(!user||!await teamForEmail(user.email))return Response.json({error:"Accesso richiesto"},{status:401});const game=new URL(request.url).searchParams.get("game");let questions:SoloQuestion[]=[];if(game==="guess")questions=playerQuestions().filter(item=>item.prompt==="Chi è il calciatore?");else if(game==="eleven")questions=elevenQuestions();else if(game==="career")questions=careerQuestions();else if(game==="survival")questions=shuffle([...playerQuestions(),...careerQuestions(),...elevenQuestions(),...historyQuestions()]).slice(0,250);else return Response.json({error:"Gioco non valido"},{status:400});return Response.json({game,total:questions.length,questions})}
