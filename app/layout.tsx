@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { LeagueAccessGate } from "./components/LeagueAccessGate";
 import { leagueAccessCookie, leagueAccessToken } from "./lib/league-access";
 import "./globals.css";
+import "./iconography.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

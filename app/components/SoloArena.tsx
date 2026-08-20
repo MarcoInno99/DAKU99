@@ -2,7 +2,6 @@
 import { useEffect,useState } from "react";
 import "../solo.css";
 import "../ranking.css";
-import "../iconography.css";
 type Question={prompt:string;clues:string[];options:string[];answer:number};
 type Game="guess"|"eleven"|"career"|"survival";
 type OfflineRow={team_slug:string;teamName:string;total_points:number;best_score:number;sessions:number};
