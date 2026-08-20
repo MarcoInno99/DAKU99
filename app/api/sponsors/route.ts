@@ -12,9 +12,14 @@ async function ensureSchema() {
 
 export async function GET(request: Request) {
   await ensureSchema();
+  const url = new URL(request.url);
+  if (url.searchParams.get("all") === "1") {
+    const rows = await env.DB.prepare("SELECT team_slug,sponsor_slug,locked_at FROM club_sponsors WHERE season=? ORDER BY team_slug").bind(sponsorSeason).all();
+    return Response.json({ sponsors: rows.results });
+  }
   const user = await getChatGPTUser();
   const ownTeam = await teamForEmail(user?.email);
-  const requested = new URL(request.url).searchParams.get("team");
+  const requested = url.searchParams.get("team");
   const team = requested ?? ownTeam;
   if (!team) return Response.json({ sponsor: null });
   const sponsor = await env.DB.prepare("SELECT sponsor_slug,locked_at FROM club_sponsors WHERE team_slug=? AND season=?").bind(team,sponsorSeason).first();
