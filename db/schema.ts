@@ -69,3 +69,9 @@ export const arenaAnswers = sqliteTable("arena_answers", {
   id: integer("id").primaryKey({ autoIncrement: true }), matchId: text("match_id").notNull(), round: integer("round").notNull(),
   teamSlug: text("team_slug").notNull(), answerIndex: integer("answer_index").notNull(), correct: integer("correct", { mode: "boolean" }).notNull(), answeredAt: text("answered_at").notNull(),
 }, (table) => [uniqueIndex("idx_arena_answer_match_round_team").on(table.matchId, table.round, table.teamSlug)]);
+
+export const arenaSoloScores = sqliteTable("arena_solo_scores", {
+  teamSlug: text("team_slug").primaryKey(), totalPoints: integer("total_points").notNull().default(0),
+  bestScore: integer("best_score").notNull().default(0), sessions: integer("sessions").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+});
