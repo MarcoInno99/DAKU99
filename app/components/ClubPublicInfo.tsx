@@ -36,7 +36,7 @@ export function ClubPublicInfo({ teamSlug }: { teamSlug: string }) {
   const selected = choiceLabels.filter(([key]) => Boolean(choice?.[key])).map(([, label]) => label);
   const sponsor = getSponsor(data.sponsors[teamSlug]?.sponsor_slug);
   return <div className="club-public-info">
-    <div><span>Sponsor</span><b>{sponsor?.name ?? "Non scelto"}</b></div>
+    <div className="club-sponsor"><span>Sponsor</span><div>{sponsor && <img src={sponsor.logo} alt={`Logo ${sponsor.name}`}/>}<b>{sponsor?.name ?? "Non scelto"}</b></div></div>
     <div><span>Scelte societarie</span>{selected.length ? <ul>{selected.map(label => <li key={label}>{label}</li>)}</ul> : <b>Nessuna scelta</b>}</div>
   </div>;
 }
