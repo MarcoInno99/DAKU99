@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
+import { LeagueAccessGate } from "./components/LeagueAccessGate";
+import { leagueAccessCookie, leagueAccessToken } from "./lib/league-access";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,17 +36,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const expectedToken = leagueAccessToken();
+  const hasAccess = Boolean(expectedToken && cookieStore.get(leagueAccessCookie)?.value === expectedToken);
   return (
     <html lang="it">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {hasAccess ? children : <LeagueAccessGate/>}
       </body>
     </html>
   );
