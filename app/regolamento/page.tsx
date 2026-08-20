@@ -4,7 +4,7 @@ import { teamForEmail } from "../lib/identity";
 export const dynamic="force-dynamic";
 const rules=[
   ["Budget","Ogni società riceve 500 crediti annuali e può riportarne al massimo 50 dalla stagione precedente."],
-  ["Stipendi","La simulazione iniziale applica l’8% al costo storico complessivo della rosa, arrotondato per eccesso."],
+  ["Stipendi","Si pagano nella stagione corrente in due rate: 3% del valore della rosa a settembre e 3% a febbraio. Ogni rata resta fissata al momento dell’addebito e non viene ricalcolata retroattivamente."],
   ["Bonus societari","Ogni club può attivare al massimo due bonus per stagione, pagandoli prima dell’asta."],
   ["Direttore Sportivo","Costo 25 crediti: permette una seconda riconferma Under 21."],
   ["Stadio","Costo 30 crediti: assegna +0,5 nelle gare casalinghe, escluse le finali in campo neutro."],
