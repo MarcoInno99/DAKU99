@@ -4,19 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import type { Team } from "../data/league";
 import { ClubCrest } from "./ClubCrest";
 
-type ChoiceKey = "sportingDirector" | "stadium" | "medicalCenter" | "youthAcademy" | "trainingCenter";
+type ChoiceKey = "sportingDirector" | "stadium" | "prestanome" | "youthAcademy" | "trainingCenter";
 const options: { key: ChoiceKey; title: string; description: string; cost: number }[] = [
   { key: "sportingDirector", title: "Direttore Sportivo", description: "Secondo Under 21 riconfermabile", cost: 25 },
   { key: "stadium", title: "Stadio", description: "Bonus +0,5 nelle gare casalinghe", cost: 30 },
-  { key: "medicalCenter", title: "Centro medico", description: "Un intervento emergenziale per infortunio lungo", cost: 15 },
+  { key: "prestanome", title: "Prestanome", description: "Abilita l’accesso al Centro scommesse", cost: 10 },
   { key: "youthAcademy", title: "Settore giovanile", description: "Stipendio dimezzato per un calciatore Primavera", cost: 20 },
-  { key: "trainingCenter", title: "Centro allenamento", description: "Sconto sulla riconferma di un calciatore Over", cost: 20 },
+  { key: "trainingCenter", title: "Centro allenamento", description: "Sconto sulla riconferma di un calciatore Over", cost: 35 },
 ];
-const emptyChoices: Record<ChoiceKey, boolean> = { sportingDirector: false, stadium: false, medicalCenter: false, youthAcademy: false, trainingCenter: false };
+const emptyChoices: Record<ChoiceKey, boolean> = { sportingDirector: false, stadium: false, prestanome: false, youthAcademy: false, trainingCenter: false };
 
 export function TeamDashboard({ team, canEdit }: { team: Team; canEdit: boolean }) {
   const [choices, setChoices] = useState(emptyChoices), [saved, setSaved] = useState<string | null>(null), [lockedAt, setLockedAt] = useState<string | null>(null), [busy, setBusy] = useState(false), [message, setMessage] = useState("");
-  useEffect(() => { fetch(`/api/choices?team=${team.slug}`).then(r => r.json()).then(data => { if(data.choice){ setChoices({sportingDirector:Boolean(data.choice.sporting_director),stadium:Boolean(data.choice.stadium),medicalCenter:Boolean(data.choice.medical_center),youthAcademy:Boolean(data.choice.youth_academy),trainingCenter:Boolean(data.choice.training_center)}); setSaved(data.choice.updated_at); setLockedAt(data.choice.locked_at); }}).catch(() => {}); }, [team.slug]);
+  useEffect(() => { fetch(`/api/choices?team=${team.slug}`).then(r => r.json()).then(data => { if(data.choice){ setChoices({sportingDirector:Boolean(data.choice.sporting_director),stadium:Boolean(data.choice.stadium),prestanome:Boolean(data.choice.medical_center),youthAcademy:Boolean(data.choice.youth_academy),trainingCenter:Boolean(data.choice.training_center)}); setSaved(data.choice.updated_at); setLockedAt(data.choice.locked_at); }}).catch(() => {}); }, [team.slug]);
   const selectedCount = Object.values(choices).filter(Boolean).length;
   const salary = Math.ceil(team.spent * .08), carry = Math.min(team.remaining, 50), structures = options.reduce((sum, option) => sum + (choices[option.key] ? option.cost : 0), 0), projected = 500 + carry - salary - structures;
   const roleCounts = useMemo(() => team.roster.reduce<Record<string, number>>((acc, p) => { const key = p.role === "Por" ? "Portieri" : /Dc|Dd|Ds|B/.test(p.role) ? "Difensori" : /Pc/.test(p.role) || p.role === "A" ? "Attaccanti" : "Centrocampisti"; acc[key] = (acc[key] ?? 0) + 1; return acc; }, {}), [team]);

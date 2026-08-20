@@ -50,10 +50,10 @@ export async function POST(request: Request) {
   }
   const current = await env.DB.prepare("SELECT locked_at FROM club_choices WHERE team_slug = ? AND season = ?").bind(ownedTeam, season).first<{locked_at:string|null}>();
   if (current?.locked_at) return Response.json({ error: "Le scelte sono bloccate. Deve riaprirle l’amministratore." }, { status: 423 });
-  const keys = ["sportingDirector","stadium","medicalCenter","youthAcademy","trainingCenter"];
+  const keys = ["sportingDirector","stadium","prestanome","youthAcademy","trainingCenter"];
   if (keys.filter(key => body[key] === true).length !== 2) return Response.json({ error: "Devi selezionare esattamente 2 scelte societarie." }, { status: 400 });
   await env.DB.prepare(`INSERT INTO club_choices (team_slug,season,user_email,sporting_director,stadium,medical_center,youth_academy,training_center,locked_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(team_slug,season) DO UPDATE SET user_email=excluded.user_email,sporting_director=excluded.sporting_director,stadium=excluded.stadium,medical_center=excluded.medical_center,youth_academy=excluded.youth_academy,training_center=excluded.training_center,locked_at=excluded.locked_at,updated_at=excluded.updated_at`)
-    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.medicalCenter?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,now,now).run();
+    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.prestanome?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,now,now).run();
   return Response.json({ ok: true, updatedAt: now, lockedAt: now });
 }
