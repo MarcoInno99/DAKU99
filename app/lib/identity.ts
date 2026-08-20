@@ -4,6 +4,9 @@ const reservedEmailToTeam: Record<string, string> = {
   "marcoizzo1999@hotmail.com": "ffi-leonardus",
 };
 
+const ownerEmail = "marcoizzo1999@hotmail.com";
+const adminEmails = new Set([ownerEmail, "petrella254@gmail.com"]);
+
 export async function ensureMembershipSchema() {
   await env.DB.batch([
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS team_memberships (
@@ -38,5 +41,5 @@ export function reservedSeats(teamSlug: string) {
 }
 
 export function isAdminEmail(email?: string | null) {
-  return email?.trim().toLowerCase() === "marcoizzo1999@hotmail.com";
+  return adminEmails.has(email?.trim().toLowerCase() ?? "");
 }
