@@ -15,5 +15,5 @@ export default async function Home() {
   const teamSlug = await teamForEmail(user.email);
   const team = teamSlug ? getTeam(teamSlug) : null;
   if (!team) return <main className="app-shell"><TeamOnboarding teams={teams} email={user.email}/></main>;
-  return <main className="app-shell"><AppHeader teamSlug={teamSlug} email={user.email} isAdmin={isAdminEmail(user.email)} /><section className="company-hub"><CrestUploader team={team} compact/><SponsorSelector teamSlug={teamSlug}/></section><TeamDashboard team={team} canEdit /></main>;
+  return <main className="app-shell"><AppHeader teamSlug={teamSlug} email={user.email} isAdmin={isAdminEmail(user.email)} /><section className="company-hub"><CrestUploader team={team} compact/><div className="company-quick-actions"><a className="primary-link" href="/formazione">Schiera la formazione</a><a className="secondary-link" href={`/club/${team.slug}`}>Apri rosa completa</a></div><SponsorSelector teamSlug={teamSlug}/></section><TeamDashboard team={team} canEdit /></main>;
 }

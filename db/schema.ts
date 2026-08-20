@@ -53,6 +53,11 @@ export const clubSponsors = sqliteTable("club_sponsors", {
   userEmail: text("user_email").notNull(), lockedAt: text("locked_at").notNull(),
 }, (table) => [uniqueIndex("idx_club_sponsors_team_season").on(table.teamSlug, table.season)]);
 
+export const marketSettings = sqliteTable("market_settings", {
+  id: integer("id").primaryKey(), releasePercentage: integer("release_percentage").notNull().default(75),
+  updatedAt: text("updated_at").notNull(), updatedBy: text("updated_by").notNull(),
+});
+
 export const arenaPresence = sqliteTable("arena_presence", {
   teamSlug: text("team_slug").primaryKey(), userEmail: text("user_email").notNull(), lastSeen: text("last_seen").notNull(),
 });
