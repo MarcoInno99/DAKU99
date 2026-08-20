@@ -10,6 +10,7 @@ export const clubChoices = sqliteTable("club_choices", {
   medicalCenter: integer("medical_center", { mode: "boolean" }).notNull().default(false),
   youthAcademy: integer("youth_academy", { mode: "boolean" }).notNull().default(false),
   trainingCenter: integer("training_center", { mode: "boolean" }).notNull().default(false),
+  thirdChoice: text("third_choice"),
   lockedAt: text("locked_at"),
   formation: text("formation"),
   lineupJson: text("lineup_json"),
@@ -35,6 +36,7 @@ export const minigameBets = sqliteTable("minigame_bets", {
   mode: text("mode").notNull(), picksJson: text("picks_json").notNull(), status: text("status").notNull().default("pending"),
   baseReward: integer("base_reward").notNull().default(0), awardedCredits: integer("awarded_credits").notNull().default(0),
   streak: integer("streak").notNull().default(0), lockedAt: text("locked_at").notNull(), settledAt: text("settled_at"),
+  winThreshold: integer("win_threshold").notNull().default(5),
 }, (table) => [uniqueIndex("idx_minigame_team_round").on(table.teamSlug, table.season, table.round)]);
 
 export const teamMemberships = sqliteTable("team_memberships", {
@@ -44,3 +46,9 @@ export const teamMemberships = sqliteTable("team_memberships", {
   teamSlug: text("team_slug").notNull(),
   createdAt: text("created_at").notNull(),
 });
+
+export const clubSponsors = sqliteTable("club_sponsors", {
+  id: integer("id").primaryKey({ autoIncrement: true }), teamSlug: text("team_slug").notNull(),
+  season: text("season").notNull(), sponsorSlug: text("sponsor_slug").notNull(),
+  userEmail: text("user_email").notNull(), lockedAt: text("locked_at").notNull(),
+}, (table) => [uniqueIndex("idx_club_sponsors_team_season").on(table.teamSlug, table.season)]);

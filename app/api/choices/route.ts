@@ -8,6 +8,7 @@ const extraColumns = [
   ["youth_academy", "INTEGER NOT NULL DEFAULT 0"],
   ["training_center", "INTEGER NOT NULL DEFAULT 0"],
   ["locked_at", "TEXT"],
+  ["third_choice", "TEXT"],
 ] as const;
 
 async function ensureSchema() {
@@ -23,7 +24,7 @@ async function ensureSchema() {
   await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_club_choices_team_season ON club_choices(team_slug, season)").run();
 }
 
-const fields = "team_slug, sporting_director, stadium, medical_center, youth_academy, training_center, locked_at, formation, lineup_json, updated_at";
+const fields = "team_slug, sporting_director, stadium, medical_center, youth_academy, training_center, third_choice, locked_at, formation, lineup_json, updated_at";
 
 export async function GET(request: Request) {
   await ensureSchema();
@@ -51,9 +52,11 @@ export async function POST(request: Request) {
   const current = await env.DB.prepare("SELECT locked_at FROM club_choices WHERE team_slug = ? AND season = ?").bind(ownedTeam, season).first<{locked_at:string|null}>();
   if (current?.locked_at) return Response.json({ error: "Le scelte sono bloccate. Deve riaprirle l’amministratore." }, { status: 423 });
   const keys = ["sportingDirector","stadium","prestanome","youthAcademy","trainingCenter"];
-  if (keys.filter(key => body[key] === true).length > 2) return Response.json({ error: "Puoi selezionare al massimo 2 scelte societarie." }, { status: 400 });
-  await env.DB.prepare(`INSERT INTO club_choices (team_slug,season,user_email,sporting_director,stadium,medical_center,youth_academy,training_center,locked_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(team_slug,season) DO UPDATE SET user_email=excluded.user_email,sporting_director=excluded.sporting_director,stadium=excluded.stadium,medical_center=excluded.medical_center,youth_academy=excluded.youth_academy,training_center=excluded.training_center,locked_at=excluded.locked_at,updated_at=excluded.updated_at`)
-    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.prestanome?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,now,now).run();
+  const sponsor=await env.DB.prepare("SELECT sponsor_slug FROM club_sponsors WHERE team_slug=? AND season=?").bind(ownedTeam,season).first<{sponsor_slug:string}>().catch(()=>null),max=sponsor?.sponsor_slug==="lido-domizia"?3:2,count=keys.filter(key => body[key] === true).length,third=typeof body.thirdChoice==="string"?body.thirdChoice:null;
+  if (count > max) return Response.json({ error: `Puoi selezionare al massimo ${max} scelte societarie.` }, { status: 400 });
+  if(count===3&&(!third||!keys.includes(third)||body[third]!==true))return Response.json({error:"Indica quale struttura riceve lo sconto Costruzione abusiva"},{status:400});
+  await env.DB.prepare(`INSERT INTO club_choices (team_slug,season,user_email,sporting_director,stadium,medical_center,youth_academy,training_center,third_choice,locked_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(team_slug,season) DO UPDATE SET user_email=excluded.user_email,sporting_director=excluded.sporting_director,stadium=excluded.stadium,medical_center=excluded.medical_center,youth_academy=excluded.youth_academy,training_center=excluded.training_center,third_choice=excluded.third_choice,locked_at=excluded.locked_at,updated_at=excluded.updated_at`)
+    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.prestanome?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,third,now,now).run();
   return Response.json({ ok: true, updatedAt: now, lockedAt: now });
 }
