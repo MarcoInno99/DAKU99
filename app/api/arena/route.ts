@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { getTeam, teams } from "../../data/league";
+import { serieAHistoricalQuiz } from "../../data/serieAQuiz";
 import { teamForEmail } from "../../lib/identity";
 
 type ArenaQuestion={prompt:string;clues?:string[];options:string[];answer:number};
@@ -25,22 +26,31 @@ function choices(correct:string,pool:string[]){const alternatives=[...new Set(po
 function buildQuestions(mode:string):ArenaQuestion[]{
   const players=shuffle(allPlayers());
   if(mode==="guess")return players.slice(0,5).map(player=>{const options=choices(player.name,players.map(p=>p.name));return{prompt:"Chi è il calciatore?",clues:[`Club: ${player.club}`,`Ruolo Mantra: ${player.role}`,`Età: ${player.age}`,`Quotazione: ${player.quotation}`],options,answer:options.indexOf(player.name)}});
-  return players.slice(0,10).map((player,index)=>{if(index%2===0){const options=choices(player.club,players.map(p=>p.club));return{prompt:`In quale club gioca ${player.name}?`,options,answer:options.indexOf(player.club)}}const options=choices(player.role,players.map(p=>p.role));return{prompt:`Qual è il ruolo Mantra di ${player.name}?`,options,answer:options.indexOf(player.role)}});
+  const history=shuffle(serieAHistoricalQuiz).slice(0,6).map(item=>{const options=shuffle(item.options);return{prompt:item.prompt,options,answer:options.indexOf(item.correct)}});
+  const current=players.slice(0,4).map((player,index)=>{if(index%2===0){const options=choices(player.club,players.map(p=>p.club));return{prompt:`In quale club gioca ${player.name}?`,options,answer:options.indexOf(player.club)}}const options=choices(player.role,players.map(p=>p.role));return{prompt:`Qual è il ruolo Mantra di ${player.name}?`,options,answer:options.indexOf(player.role)}});
+  return shuffle([...history,...current]);
 }
 function publicMatch(match:ArenaMatch,team:string,answered:boolean){const questions=JSON.parse(match.questions_json)as ArenaQuestion[],question=questions[match.current_round];return{id:match.id,mode:match.mode,status:match.status,currentRound:match.current_round,totalRounds:questions.length,myTeam:team,challengerTeam:match.challenger_team,opponentTeam:match.opponent_team,myScore:team===match.challenger_team?match.challenger_score:match.opponent_score,opponentScore:team===match.challenger_team?match.opponent_score:match.challenger_score,winnerTeam:match.winner_team,answered,question:question?{prompt:question.prompt,clues:question.clues??[],options:question.options}:null}}
 
 export async function GET(request:Request){
   const actor=await identity();if(!actor)return Response.json({error:"Accesso richiesto"},{status:401});await ensureSchema();
-  const matchId=new URL(request.url).searchParams.get("match");
+  const url=new URL(request.url),matchId=url.searchParams.get("match");
   if(matchId){const match=await env.DB.prepare("SELECT * FROM arena_matches WHERE id=? AND (challenger_team=? OR opponent_team=?)").bind(matchId,actor.team,actor.team).first<ArenaMatch>();if(!match)return Response.json({error:"Sfida non trovata"},{status:404});const answered=match.status==="active"?Boolean(await env.DB.prepare("SELECT id FROM arena_answers WHERE match_id=? AND round=? AND team_slug=?").bind(match.id,match.current_round,actor.team).first()):false;return Response.json({match:publicMatch(match,actor.team,answered)})}
   const cutoff=new Date(Date.now()-45000).toISOString();
-  const presence=await env.DB.prepare("SELECT team_slug FROM arena_presence WHERE last_seen>=? AND team_slug<>? ORDER BY last_seen DESC").bind(cutoff,actor.team).all<{team_slug:string}>();
+  const presence=await env.DB.prepare("SELECT team_slug FROM arena_presence WHERE last_seen>=? ORDER BY last_seen DESC").bind(cutoff).all<{team_slug:string}>();
   const pending=await env.DB.prepare("SELECT id,challenger_team,opponent_team,mode,status,created_at FROM arena_matches WHERE opponent_team=? AND status='pending' ORDER BY created_at DESC").bind(actor.team).all();
   const active=await env.DB.prepare("SELECT id,challenger_team,opponent_team,mode,status,created_at FROM arena_matches WHERE (challenger_team=? OR opponent_team=?) AND status='active' ORDER BY started_at DESC LIMIT 1").bind(actor.team,actor.team).first();
+  const onlineTeams=new Set(presence.results.map(row=>row.team_slug));
+  const coaches=await env.DB.prepare("SELECT team_slug,coach_name FROM club_identity").all<{team_slug:string;coach_name:string|null}>().catch(()=>({results:[]}));
+  const coachMap=new Map(coaches.results.map(row=>[row.team_slug,row.coach_name]));
+  const members=teams.map(team=>({teamSlug:team.slug,teamName:team.name,coachName:coachMap.get(team.slug)??null,online:onlineTeams.has(team.slug)}));
+  const invitations=pending.results.map((item:Record<string,unknown>)=>({...item,challenger_name:getTeam(String(item.challenger_team))?.name??String(item.challenger_team)}));
+  const online=members.filter(member=>member.online&&member.teamSlug!==actor.team).map(member=>({teamSlug:member.teamSlug,teamName:member.teamName}));
+  if(url.searchParams.get("compact")==="1")return Response.json({myTeam:actor.team,members,pending:invitations,active});
   const finished=await env.DB.prepare("SELECT challenger_team,opponent_team,winner_team FROM arena_matches WHERE status='finished'").all<{challenger_team:string;opponent_team:string;winner_team:string|null}>();
   const table=new Map<string,{teamSlug:string;wins:number;losses:number;draws:number;played:number}>();for(const team of teams)table.set(team.slug,{teamSlug:team.slug,wins:0,losses:0,draws:0,played:0});for(const match of finished.results){const a=table.get(match.challenger_team),b=table.get(match.opponent_team);if(!a||!b)continue;a.played++;b.played++;if(!match.winner_team){a.draws++;b.draws++}else if(match.winner_team===a.teamSlug){a.wins++;b.losses++}else{b.wins++;a.losses++}}
   const leaderboard=[...table.values()].map(row=>({...row,teamName:getTeam(row.teamSlug)?.name??row.teamSlug,points:row.wins*3+row.draws})).sort((a,b)=>b.points-a.points||b.wins-a.wins||a.losses-b.losses);
-  return Response.json({myTeam:actor.team,online:presence.results.map(row=>({teamSlug:row.team_slug,teamName:getTeam(row.team_slug)?.name??row.team_slug})),pending:pending.results,active,leaderboard});
+  return Response.json({myTeam:actor.team,online,members,pending:invitations,active,leaderboard});
 }
 
 export async function POST(request:Request){
