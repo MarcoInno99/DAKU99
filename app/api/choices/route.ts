@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: "Accesso richiesto" }, { status: 401 });
-  const ownedTeam = teamForEmail(user.email);
+  const ownedTeam = await teamForEmail(user.email);
   if (!ownedTeam) return Response.json({ error: "Nessuna squadra associata a questa email" }, { status: 403 });
   const body = await request.json() as Record<string, unknown>;
   if (body.teamSlug !== ownedTeam) return Response.json({ error: "Puoi modificare soltanto la tua società" }, { status: 403 });

@@ -14,7 +14,7 @@ async function hasPrestanome(team:string){
 
 export async function GET(request:Request){
   await schema();
-  const user=await getChatGPTUser(),team=teamForEmail(user?.email);
+  const user=await getChatGPTUser(),team=await teamForEmail(user?.email);
   if(!team||!await hasPrestanome(team))return Response.json({error:"Il Centro scommesse richiede Prestanome"},{status:403});
   const round=Number(new URL(request.url).searchParams.get("round"));
   const bet=round?await env.DB.prepare("SELECT mode,picks_json,status,base_reward,awarded_credits,streak,locked_at FROM minigame_bets WHERE team_slug=? AND season='2026/27' AND round=?").bind(team,round).first():null;
@@ -25,7 +25,7 @@ export async function GET(request:Request){
 export async function POST(request:Request){
   const user=await getChatGPTUser();
   if(!user)return Response.json({error:"Accesso richiesto"},{status:401});
-  const team=teamForEmail(user.email);
+  const team=await teamForEmail(user.email);
   if(!team)return Response.json({error:"Nessuna squadra associata"},{status:403});
   if(!await hasPrestanome(team))return Response.json({error:"Devi attivare Prestanome per usare il Centro scommesse"},{status:403});
   const body=await request.json() as {round:number;mode:string;picks:any[]};

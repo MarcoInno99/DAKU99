@@ -36,3 +36,11 @@ export const minigameBets = sqliteTable("minigame_bets", {
   baseReward: integer("base_reward").notNull().default(0), awardedCredits: integer("awarded_credits").notNull().default(0),
   streak: integer("streak").notNull().default(0), lockedAt: text("locked_at").notNull(), settledAt: text("settled_at"),
 }, (table) => [uniqueIndex("idx_minigame_team_round").on(table.teamSlug, table.season, table.round)]);
+
+export const teamMemberships = sqliteTable("team_memberships", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().unique(),
+  userEmail: text("user_email").notNull().unique(),
+  teamSlug: text("team_slug").notNull(),
+  createdAt: text("created_at").notNull(),
+});

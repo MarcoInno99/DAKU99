@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: "Accesso richiesto" }, { status: 401 });
-  const team = teamForEmail(user.email);
+  const team = await teamForEmail(user.email);
   if (!team) return Response.json({ error: "Club non associato alla tua email" }, { status: 403 });
   try {
     await ensureSchema(); const form = await request.formData();

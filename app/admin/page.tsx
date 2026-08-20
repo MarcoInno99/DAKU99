@@ -6,4 +6,4 @@ import { teams } from "../data/league";
 import { isAdminEmail, teamForEmail } from "../lib/identity";
 
 export const dynamic = "force-dynamic";
-export default async function AdminPage(){const user=await getChatGPTUser();if(!isAdminEmail(user?.email))notFound();return <main className="app-shell"><AppHeader teamSlug={teamForEmail(user?.email)} email={user?.email??null} isAdmin/><AdminPanel teams={teams}/></main>}
+export default async function AdminPage(){const user=await getChatGPTUser();if(!isAdminEmail(user?.email))notFound();return <main className="app-shell"><AppHeader teamSlug={await teamForEmail(user?.email)} email={user?.email??null} isAdmin/><AdminPanel teams={teams}/></main>}
