@@ -52,8 +52,24 @@ export async function getEffectiveTeam(slug: string) {
   return (await getEffectiveTeams()).find(team => team.slug === slug);
 }
 
+async function reconcileSocietalChoices(teamSlug:string){
+  const choice=await env.DB.prepare("SELECT sporting_director,stadium,medical_center,youth_academy,training_center,third_choice,locked_at,updated_at,user_email FROM club_choices WHERE team_slug=? AND season=?")
+    .bind(teamSlug,managerSeason).first<Record<string,unknown>>().catch(()=>null);
+  if(!choice?.locked_at)return;
+  const costs:{column:string;key:string;cost:number}[]=[
+    {column:"sporting_director",key:"sportingDirector",cost:25},{column:"stadium",key:"stadium",cost:30},
+    {column:"medical_center",key:"prestanome",cost:10},{column:"youth_academy",key:"youthAcademy",cost:20},
+    {column:"training_center",key:"trainingCenter",cost:35},
+  ];
+  const total=costs.reduce((sum,item)=>sum+(Number(choice[item.column])===1?Math.ceil(item.cost*(choice.third_choice===item.key?.toString()?0.75:1)):0),0);
+  await env.DB.prepare(`INSERT INTO team_credit_adjustments(team_slug,season,reference,amount,note,created_at,created_by) VALUES(?,?,?,?,?,?,?)
+    ON CONFLICT(team_slug,season,reference) DO UPDATE SET amount=excluded.amount,note=excluded.note`)
+    .bind(teamSlug,managerSeason,"societal-choices",-total,"Costo scelte societarie stagione corrente",String(choice.updated_at??new Date().toISOString()),String(choice.user_email??"system-reconciliation")).run();
+}
+
 export async function clubBalance(team: Team) {
   await ensureLeagueStateSchema();
+  await reconcileSocietalChoices(team.slug);
   const [adjustments, salaries, prizes] = await Promise.all([
     env.DB.prepare("SELECT COALESCE(SUM(amount),0) total FROM team_credit_adjustments WHERE team_slug=? AND season=?").bind(team.slug, managerSeason).first<{total:number}>(),
     env.DB.prepare("SELECT COALESCE(SUM(amount),0) total FROM salary_payments WHERE team_slug=?").bind(team.slug).first<{total:number}>().catch(()=>({total:0})),
