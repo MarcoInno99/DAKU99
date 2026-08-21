@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { teamForEmail } from "../../lib/identity";
+import { ensureLeagueStateSchema, managerSeason } from "../../lib/league-state";
 
 const season = "2027-2028";
 const extraColumns = [
@@ -55,8 +56,15 @@ export async function POST(request: Request) {
   const sponsor=await env.DB.prepare("SELECT sponsor_slug FROM club_sponsors WHERE team_slug=? AND season=?").bind(ownedTeam,season).first<{sponsor_slug:string}>().catch(()=>null),max=sponsor?.sponsor_slug==="lido-domizia"?3:2,count=keys.filter(key => body[key] === true).length,third=typeof body.thirdChoice==="string"?body.thirdChoice:null;
   if (count > max) return Response.json({ error: `Puoi selezionare al massimo ${max} scelte societarie.` }, { status: 400 });
   if(count===3&&(!third||!keys.includes(third)||body[third]!==true))return Response.json({error:"Indica quale struttura riceve lo sconto Costruzione abusiva"},{status:400});
-  await env.DB.prepare(`INSERT INTO club_choices (team_slug,season,user_email,sporting_director,stadium,medical_center,youth_academy,training_center,third_choice,locked_at,updated_at)
+  const costs:Record<string,number>={sportingDirector:25,stadium:30,prestanome:10,youthAcademy:20,trainingCenter:35};
+  const totalCost=keys.reduce((sum,key)=>sum+(body[key]===true?Math.ceil(costs[key]*(key===third?0.75:1)):0),0);
+  await ensureLeagueStateSchema();
+  await env.DB.batch([env.DB.prepare(`INSERT INTO club_choices (team_slug,season,user_email,sporting_director,stadium,medical_center,youth_academy,training_center,third_choice,locked_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(team_slug,season) DO UPDATE SET user_email=excluded.user_email,sporting_director=excluded.sporting_director,stadium=excluded.stadium,medical_center=excluded.medical_center,youth_academy=excluded.youth_academy,training_center=excluded.training_center,third_choice=excluded.third_choice,locked_at=excluded.locked_at,updated_at=excluded.updated_at`)
-    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.prestanome?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,third,now,now).run();
-  return Response.json({ ok: true, updatedAt: now, lockedAt: now });
+    .bind(ownedTeam,season,user.email,body.sportingDirector?1:0,body.stadium?1:0,body.prestanome?1:0,body.youthAcademy?1:0,body.trainingCenter?1:0,third,now,now),
+    env.DB.prepare(`INSERT INTO team_credit_adjustments(team_slug,season,reference,amount,note,created_at,created_by) VALUES(?,?,?,?,?,?,?)
+      ON CONFLICT(team_slug,season,reference) DO UPDATE SET amount=excluded.amount,note=excluded.note,created_at=excluded.created_at,created_by=excluded.created_by`)
+      .bind(ownedTeam,managerSeason,"societal-choices",-totalCost,"Costo scelte societarie stagione corrente",now,user.email)
+  ]);
+  return Response.json({ ok: true, updatedAt: now, lockedAt: now, chargedCredits:totalCost });
 }

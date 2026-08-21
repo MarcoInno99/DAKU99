@@ -58,6 +58,18 @@ export const marketSettings = sqliteTable("market_settings", {
   updatedAt: text("updated_at").notNull(), updatedBy: text("updated_by").notNull(),
 });
 
+export const importedRosterPlayers = sqliteTable("imported_roster_players", {
+  id: integer("id").primaryKey({ autoIncrement: true }), teamSlug: text("team_slug").notNull(), playerName: text("player_name").notNull(),
+  club: text("club").notNull(), role: text("role").notNull(), age: integer("age").notNull().default(0), cost: integer("cost").notNull().default(0),
+  quotation: integer("quotation").notNull().default(0), fvm: integer("fvm").notNull().default(0), fuoriLista: text("fuori_lista"),
+  rowOrder: integer("row_order").notNull().default(0), importBatch: text("import_batch").notNull(), importedAt: text("imported_at").notNull(), importedBy: text("imported_by").notNull(),
+}, table => [uniqueIndex("idx_imported_roster_team_player").on(table.teamSlug, table.playerName)]);
+
+export const teamCreditAdjustments = sqliteTable("team_credit_adjustments", {
+  id: integer("id").primaryKey({ autoIncrement: true }), teamSlug: text("team_slug").notNull(), season: text("season").notNull(),
+  reference: text("reference").notNull(), amount: integer("amount").notNull(), note: text("note"), createdAt: text("created_at").notNull(), createdBy: text("created_by").notNull(),
+}, table => [uniqueIndex("idx_credit_adjustment_reference").on(table.teamSlug, table.season, table.reference)]);
+
 export const arenaPresence = sqliteTable("arena_presence", {
   teamSlug: text("team_slug").primaryKey(), userEmail: text("user_email").notNull(), lastSeen: text("last_seen").notNull(),
 });
